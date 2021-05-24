@@ -1,0 +1,121 @@
+---
+title: "Regression"
+author: "Miguel Moravec"
+date: "5/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(pacman)
+p_load(tidyverse, dplyr, readr, tidyr, splitstackshape, stringr, readxl, ggplot2, manipulate, leaps)
+
+
+```
+
+
+
+
+```{r regression_char_no_wil}
+
+
+###log model 7 day
+
+x = c(34.4, 44.6, 41.4, 75.7,  73, 64.4)
+
+y = c(.002476, .000879, 0.000461, 0, 0, 0)
+
+
+plot(x,y)
+
+model <- lm(y ~ log(x))
+
+model
+
+summary(model)
+
+#plot(model)
+
+### 7 day linear model below
+
+xx = x
+
+yy = predict(model,newdata=list(xx),
+          interval="confidence")
+
+plot(x,y, xlab="Gas Station Outages (%)", ylab="Per Capita Annual Petro Flux, (kt/person)") + matlines(xx,yy, lwd=2)
+
+
+model2 <- lm(y ~ x)
+
+model2
+
+#plot(model2)
+
+summary(model2)
+
+xx = x
+
+yy = predict(model2,newdata=list(xx),
+          interval="confidence")
+
+plot(x,y, xlab="Gas Station Outages (%)", ylab="Per Capita Annual Petro Flux, (kt/person)") + matlines(xx,yy, lwd=2)
+
+
+
+```
+
+```{r regression2_char_no_wil}
+
+###log model 12 day
+
+x2 = c(18.9, 34.1, 31.6, 44.1,  60.1, 41.6)
+
+y = c(.002476, .000879, 0.000461, 0, 0, 0)
+
+
+plot(x2,y)
+
+model3 <- lm(y ~ log(x2))
+
+model3
+
+plot(model3)
+
+summary(model3)
+
+#plot(model3)
+
+xx2 = x2
+
+yy2 = predict(model3,newdata=list(xx2),
+          interval="confidence")
+
+plot(x2,y, xlab="Gas Station Outages (%)", ylab="Per Capita Annual Petro Flux, (kt/p)") + matlines(xx2,yy2, lwd=2)
+
+### 12 day linear model below
+
+x2 = c(18.9, 34.1, 31.6, 44.1,  60.1, 41.6)
+
+y = c(.002476, .000879, 0.000461, 0, 0, 0)
+
+
+plot(x2,y)
+
+model3 <- lm(y ~ x2)
+
+model3
+
+summary(model3)
+
+#plot(model3)
+
+xx2 = x2
+
+yy2 = predict(model3,newdata=list(xx2),
+          interval="confidence")
+
+plot(x2,y, xlab="Gas Station Outages (%)", ylab="Per Capita Annual Petro Flux, (kt/p)") + matlines(xx2,yy2, lwd=2)
+
+
+```
