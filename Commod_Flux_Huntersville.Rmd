@@ -1,0 +1,199 @@
+---
+title: "Final Project"
+author: "Miguel Moravec"
+date: "10/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+#Important: only the following commodity codes are collected:
+#10 20 30 40 50 70 90
+
+library(pacman)
+p_load(tidyverse, dplyr, readr, tidyr, splitstackshape, stringr, readxl, ggplot2, manipulate, leaps)
+
+
+```
+
+```{r 19_data_load}
+
+lock_list = c("1_KY_Lock", "2_Pickwick", "3_Wilson","4_Wheeler","5_Guntersville","6_Nickajac","7_Chickamauga","8_Watts","9_Ft_Loudoun")
+
+y <- data.frame(Date=as.Date(character()),
+                 stringsAsFactors=FALSE) 
+
+for (j in 1:length(lock_list)){
+  
+  set_path = paste('C:/Users/Miguel/Documents/Classes/Hiba DS/Cluster Project/',lock_list[j],sep="")
+  
+  setwd(set_path)
+  
+  file_list = grep(list.files(path = set_path, pattern = "\\.csv$", full.names = TRUE, all.files = FALSE, recursive = TRUE), pattern="___", inv=T, value=T)
+  
+  #y <- data.frame(Date=as.Date(character()),
+  #                 stringsAsFactors=FALSE) 
+  
+  for (i in file_list) {
+    x = read.csv(i, header = TRUE)
+    x = x %>% mutate(Downbound.KTons = as.numeric(Downbound.KTons))
+    x = x %>% mutate(Upbound.KTons = as.numeric(Upbound.KTons))
+    date = substr(toString(i), (nchar(i)-7),(nchar(i)-4))
+    lock = substr(toString(i), 59,59)
+    x = x %>% mutate("YYMM" = date) %>% mutate("Lock" = lock)
+    y = bind_rows(x, y)
+    
+  }
+}
+
+y
+
+y = y %>% select(-Description, -Date)
+y = y %>% replace(is.na(.), 0)
+y
+
+dim(y)
+
+#sum_commod = y %>% select(Upbound.KTons, Downbound.KTons, Total.KTons, Commodity.Code, Lock) %>% group_by(Commodity.Code, Lock) %>% summarise_each(funs(sum))
+
+
+nosum_commod = y %>% select(Upbound.KTons, Downbound.KTons, Total.KTons, Commodity.Code, Lock, YYMM)%>% arrange(YYMM)
+nosum_commod
+
+#write something that makes new dataframe per commodity, calculates difference btw locks called links
+
+links = data.frame(Date=as.Date(character()),
+                 stringsAsFactors=FALSE) 
+
+links
+
+#8 commodity codes
+#8 links
+#23 dates
+#1472 rows
+
+for(j in c(10,20,30,40,50,60,70,90)){
+  
+  change_sum_commod = nosum_commod %>% filter(Commodity.Code == j)
+  change_sum_commod
+  
+  #6 columns by 23*9=207
+  
+  total_matrix = matrix(rep(0, len=1), nrow = 207, ncol = 8)
+  total_matrix[,4] = j
+  lock_number = rep(1:9, times=23) #23 is total number of months
+  date_seq = rep(c(1901,1902,1903,1904,1905,1906,1907,1908,1909,1910,1911,1912,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011),each=9)
+      #length(date_seq) check if this right length
+  
+  
+  for (i in 1:nrow(total_matrix)){
+    total_matrix[i,5] = lock_number[i]
+    total_matrix[i,6] = date_seq[i]
+    total_matrix[i,7] = i
+  }
+  
+  colnames(total_matrix) = c("Upbound.KTons","Downbound.KTons","Total.KTons","Commodity.Code","lock_number","date_seq","id","mag")
+  total_matrix = as.data.frame(total_matrix)
+  total_matrix
+  
+  for (i in 1:nrow(change_sum_commod)){
+    
+    temp_matrix = total_matrix %>% filter(lock_number == change_sum_commod[i,5] & date_seq == change_sum_commod[i,6])
+    dummy = temp_matrix[1,7]
+    total_matrix[dummy,1]=change_sum_commod[i,1]
+    total_matrix[dummy,2]=change_sum_commod[i,2]
+    total_matrix[dummy,3]=change_sum_commod[i,3]
+  }
+  
+  total_matrix
+  
+  for (i in 1:nrow(total_matrix)){
+      #define link
+      total_matrix[i,5] = paste(total_matrix[i,5],"_",total_matrix[i+1,5],sep="")
+      #define upstream change
+      total_matrix[i,1] = as.numeric(total_matrix[i+1,1]) - as.numeric(total_matrix[i,1])
+      #define downstream change
+      total_matrix[i,2] = as.numeric(-total_matrix[i+1,2]) + as.numeric(total_matrix[i,2])
+      #define net change
+      total_matrix[i,3] = as.numeric(total_matrix[i,1]) + as.numeric(total_matrix[i,2])
+      #define total magnitude of change 
+      total_matrix[i,8] = abs(as.numeric(total_matrix[i,1])) + abs(as.numeric(total_matrix[i,2]))
+  }
+  total_matrix
+  #remove extra calculated row
+  total_matrix = total_matrix %>% filter(lock_number != "9_1") %>% filter(lock_number != "9_NA")
+  links = bind_rows(total_matrix, links)
+  
+}
+
+names(links)[5] <- "Lock.Link"
+names(links)[1] <- "Upbound.KTons.Change"
+names(links)[2] <- "Downbound.KTons.Change"
+names(links)[3] <- "Net.KTons.Change"
+names(links)[8] <- "Total.Mag.Ktons.Change"
+links = links %>% select(-Date, -id)
+links
+
+####for Janey Craig thrive
+
+links_thrive = links %>% filter(Lock.Link=="4_5") %>% mutate("Year"= substr(date_seq, start = 1, stop = 2)) %>% filter(Year=="19")
+links_thrive
+
+
+#coal
+links_thrive_10 = links_thrive %>% filter(Commodity.Code=="10") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_10 = links_thrive_10 %>% summarise_all(sum)
+links_thrive_10
+
+
+
+#petro
+links_thrive_20 = links_thrive %>% filter(Commodity.Code=="20") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_20 = links_thrive_20 %>% summarise_all(sum)
+links_thrive_20
+
+
+#chemicals
+links_thrive_30 = links_thrive %>% filter(Commodity.Code=="30") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_30 = links_thrive_30 %>% summarise_all(sum)
+links_thrive_30
+
+#crude_mat
+links_thrive_40 = links_thrive %>% filter(Commodity.Code=="40") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_40 = links_thrive_40 %>% summarise_all(sum)
+links_thrive_40
+
+#manuf goods
+links_thrive_50 = links_thrive %>% filter(Commodity.Code=="50") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_50 = links_thrive_50 %>% summarise_all(sum)
+links_thrive_50
+
+#food
+links_thrive_60 = links_thrive %>% filter(Commodity.Code=="60") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_60 = links_thrive_60 %>% summarise_all(sum)
+links_thrive_60
+
+#machinery
+links_thrive_70 = links_thrive %>% filter(Commodity.Code=="70") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+links_thrive_70 = links_thrive_70 %>% summarise_all(sum)
+links_thrive_70
+
+#others
+#links_thrive_20 = links_thrive %>% filter(Commodity.Code=="20") %>% select(-date_seq, -Year, -Lock.Link, -Commodity.Code)
+#links_thrive_20 = links_thrive_20 %>% summarise_all(sum)
+#links_thrive_20
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+

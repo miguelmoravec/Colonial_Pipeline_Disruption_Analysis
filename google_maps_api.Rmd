@@ -1,0 +1,101 @@
+---
+title: "Address to Lat Long"
+author: "Miguel Moravec"
+date: "9/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(dplyr, readr, tidyr, stringr, readxl, mapsapi, openxlsx)
+
+citation("mapsapi")
+```
+
+```{r key}
+
+key = "AIzaSyC60IH1nFbhB00YBn8tHoBqMF47WIT4L3I"
+
+```
+
+```{r get_address}
+
+address_list = c("978 Port Authority Road, Eddyville, KY 42038 ",
+"8 Barge Point Road. Clarksville, TN 37042",
+"3730 Amy Lynn Drive. Nashville, TN 37218",
+"P.o. Box 70128, 520 Cowan st., Nashville, TN 37207",
+"3500 Grundy Quarles Hwy., Gainesboro, TN 38588",
+"710 S. 1st st., Nashville, TN 37213",
+"2000 WAYNE Sullivan Drive, Paducah KY 42003",
+"P.O. Box 1270, 750 Shar-Cal Road, Calvert City, KY 42029",
+"5044 Industrial Parkway, Calvert City, KY 42029",
+"877 Dover Road, Grand Rivers, KY 42045",
+"947 U.S. Hwy 62, Grand Rivers, KY 42045",
+"1020 Dover Road, Grand Rivers, KY 42045",
+"1340 Perryville Road. Parsons. TN 38363",
+"291 Point Pleasant Ln., Scotts Hill, TN 38374",
+"43 County Road 370, Iuka, MS 38852",
+"20 Hightower Place, Florence. AL 35630",
+"P.O. Box 942, 810 Terrace St.. Florence, AL 35631",
+"1802 Red Hat Road, Decatur. AL 35602",
+"4301 Iverson Blvd., Decatur. AL 35673",
+"500 Market St. NW. Decatur. AL 35601",
+"2551 Worth St. Guntersville AL 35976",
+"P.O. Box 6, 3700 E. Lake Guntersville Road, Guntersville, AL 35976",
+"P.O. Box 1588, Mobile AL 36633",
+"1570 Industrial Park, Jasper TN 37347",
+"849 Port Road, South Pittsburg, TN 37380",
+"P.O. Box 4359, Hamm Road, Chattanooga, TN 37405",
+"980 W. 19th St., Chattanooga TN 37408",
+"P.O. Box 4800; 530 Manufacturers Road, Chattanooga, TN 37405",
+"480 Terminal Road, Chattanooga, TN 37422",
+"P.O. Box 608, 5480 Industrial Park Drive, Lenoir City, TN 37771",
+"2435 Asbury Road, Knoxville, TN 37914"
+)
+
+
+latlonglist = c(NA)
+
+for (i in address_list) {
+
+doc = mp_geocode(
+  addresses = i,
+  key = key,
+  quiet = TRUE
+)
+
+cat = toString(mp_get_points(doc))
+
+latlong = str_sub(cat,-27,-1)
+latlong = trimws(latlong, whitespace = "[= c)()]")
+latlong
+
+latlonglist = c(latlonglist, latlong)
+
+}
+
+latlonglist = na.omit(latlonglist)
+
+```
+
+```{r dataframe_2_excel}
+
+
+address_table = data.frame(address_list, latlonglist)
+
+address_table = address_table %>% separate( col = latlonglist, into = c("long", "lat"), sep = ",")
+
+address_table = address_table[,c(1,3,2)]
+
+address_table = address_table %>% mutate(lat_long = paste(lat, long, sep = ","))
+
+address_table
+
+write.xlsx(address_table, "Operator Lat_Long.xlsx")
+
+
+
+```
+
+
