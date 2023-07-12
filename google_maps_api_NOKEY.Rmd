@@ -5,6 +5,8 @@ date: "9/14/2020"
 output: html_document
 ---
 
+This script pulls the lat/long address of public ports along the Tennessee and Cumberland Rivers.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(pacman)

@@ -5,6 +5,8 @@ date: "10/10/2020"
 output: html_document
 ---
 
+This script evaluates Commodity Flux on the Tennessee River, specifically looking at the Huntsville region.
+
 ```{r setup, include=FALSE}
 
 #Important: only the following commodity codes are collected:

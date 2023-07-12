@@ -5,6 +5,8 @@ date: "10/10/2020"
 output: html_document
 ---
 
+This script evaluates Commodity Flux on the Cumberland River, specifically looking at the Nashville region.
+
 ```{r setup, include=FALSE}
 
 #Important: only the following commodity codes are collected:
@@ -17,6 +19,8 @@ p_load(tidyverse, dplyr, readr, tidyr, splitstackshape, stringr, readxl, ggplot2
 ```
 
 ```{r 19_data_load}
+
+# Loads LPMS Commodity data 
 
 lock_list = c("1_Barkley", "2_Cheatham", "3_OldHickory")
 
@@ -33,6 +37,8 @@ for (j in 1:length(lock_list)){
   
   #y <- data.frame(Date=as.Date(character()),
   #                 stringsAsFactors=FALSE) 
+  
+#cleans data
   
   for (i in file_list) {
     x = read.csv(i, header = TRUE)
@@ -61,7 +67,7 @@ dim(y)
 nosum_commod = y %>% select(Upbound.KTons, Downbound.KTons, Total.KTons, Commodity.Code, Lock, YYMM)%>% arrange(YYMM)
 nosum_commod
 
-#write something that makes new dataframe per commodity, calculates difference btw locks called links
+#makes new dataframe per commodity, calculates difference btw locks called links
 
 links = data.frame(Date=as.Date(character()),
                  stringsAsFactors=FALSE) 
