@@ -17,7 +17,7 @@ citation("mapsapi")
 
 ```{r key}
 
-key = "AIzaSyC60IH1nFbhB00YBn8tHoBqMF47WIT4L3I"
+key = ""
 
 ```
 
